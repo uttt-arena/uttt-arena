@@ -16,6 +16,14 @@ class Settings extends Component {
     };
   }
 
+  handleStart(e) {
+    e.preventDefault();
+
+    if (typeof this.props.onStart === 'function') {
+      this.props.onStart(this.state);
+    }
+  }
+
   render() {
     return (
       <div>
@@ -63,7 +71,7 @@ class Settings extends Component {
           </div>
         </div>
 
-        <button>start</button>
+        <button onClick={this.handleStart.bind(this)}>start</button>
       </div>
     );
   }
