@@ -128,56 +128,98 @@ class Game extends Component {
   constructor(props) {
     super(props);
 
-    // board[i][j] = (-|white|black)
-    const board = Array.apply(null, Array(9)).map(() =>
-      Array.apply(null, Array(9)).map(() => '-')
-    );
+    this.uttt = new UTTT();
 
     this.state = {
-      board: board,
-      turn: 'white',
+      moves: [],
+      turn: 'blue',
+      move_row: 0,
+      move_col: 0,
     }
   }
 
   handleMove(row, col) {
-    const { board, turn } = this.state;
-    // TODO: validate move
-    board[row][col] = turn;
+    const { turn } = this.state;
+    const move = {
+      player: turn,
+      row: row,
+      col: col,
+    };
+
+    if (!this.uttt.isValid(move.player, row, col)) {
+      alert('invalid move');
+      return this.setState({
+        move_row: 0,
+        move_col: 0
+      });
+    }
+
+    this.uttt.handleMove(move.player, row, col);
+
+    const moves = this.state.moves;
+    moves.push(move);
 
     this.setState({
-      board: board,
-      turn: (turn === 'white') ? 'black' : 'white',
-    })
+      moves: moves,
+      turn: (turn !== 'blue') ? 'blue' : 'red',
+    });
   }
 
-  board() {
-    return (
-      <table>
-        <tbody>
-          {this.state.board.map((row, ir) => (
-            <tr key={ir}>
-              {row.map((col, ic) => (
-                <td
-                  key={ic}
-                  onClick={this.handleMove.bind(this, ir, ic)}
-                >{col.charAt(0)}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    )
+  move(event) {
+    event.preventDefault();
+
+    this.handleMove(this.state.move_row, this.state.move_col);
   }
 
   render() {
     return (
       <div>
-        <h1>Game</h1>
         <b>{this.props.rules.white_player}</b>
         &nbsp;vs&nbsp;
         <b>{this.props.rules.black_player}</b>
+        <h4>Moves</h4>
+        <ul>
+          {this.state.moves.map(move => (
+            <li>{move.player} - ({move.row}, {move.col})</li>
+          ))}
+        </ul>
+
         <h4>Board</h4>
-        {this.board()}
+        <label>{this.uttt.status}</label>
+
+        <table>
+          <tbody>
+            {this.uttt.board.map(row => (
+              <tr>
+                {row.map(ttt => (
+                  <td>
+                    <label>{JSON.stringify(ttt.winner, null, ' ')}</label>
+                    <pre>
+                    {ttt.board.map(row => {
+                      row = row.map(col => col ? col.charAt(0) : '-');
+                      return row.join('');
+                    }).join('\n')}
+                    </pre>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <form>
+          <label>row</label>
+          <input
+            value={this.state.move_row}
+            onChange={e => this.setState({ move_row: +e.target.value })}
+          />
+          <label>col</label>
+          <input
+            value={this.state.move_col}
+            onChange={e => this.setState({ move_col: +e.target.value })}
+          />
+          <button onClick={this.move.bind(this)}>move!</button>
+        </form>
       </div>
     );
   }
